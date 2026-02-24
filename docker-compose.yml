@@ -1,0 +1,94 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  GlitchRun — Docker Compose
+#
+#  Services:
+#   postgres  — PostgreSQL 16 (persistent data)
+#   redis     — Redis 7 (ephemeral round bets, ultra-low latency)
+#   backend   — Go WebSocket server
+#   frontend  — Next.js App Router
+#
+#  Start everything: docker compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: glitchrun_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-glitchrun}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Exposed for pgAdmin / TablePlus debugging
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: glitchrun_redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no # Disable persistence (ephemeral)
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Go Backend ──────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: glitchrun_backend
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "host=postgres user=${POSTGRES_USER:-postgres} password=${POSTGRES_PASSWORD:-postgres} dbname=${POSTGRES_DB:-glitchrun} port=5432 sslmode=disable"
+      REDIS_ADDR: "redis:6379"
+      REDIS_PASS: ""
+      JWT_SECRET: "${JWT_SECRET:-change-me-in-production}"
+      ALLOWED_ORIGIN: "http://localhost:3000"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Hot-reload in dev: mount source and use air (comment out in prod)
+    # volumes:
+    #   - ./backend:/app
+
+    # ── Next.js Frontend ─────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # The WS URL seen by the browser — must be the host-accessible backend URL
+        NEXT_PUBLIC_WS_URL: "ws://localhost:8080/ws"
+    container_name: glitchrun_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+# ── Named volumes (data persists across `docker compose down`) ─────────────────
+volumes:
+  postgres_data:
+    driver: local

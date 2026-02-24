@@ -1,0 +1,648 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLITCHRUN — CYBERPUNK CRT DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── CSS Custom Properties ─────────────────────────────────────────────────── */
+:root {
+  --surface: #0a0e17;
+  --surface-card: #0f1420;
+  --surface-border: #1a2236;
+  --crt-green: #22c55e;
+  --crt-cyan: #00ffee;
+  --crt-red: #ff2244;
+  --crt-purple: #a855f7;
+  --crt-yellow: #eab308;
+  --neon-glow: 0 0 8px rgba(34, 197, 94, 0.4);
+  --scanline-opacity: 0.035;
+  --jitter-intensity: 0.5px;
+}
+
+/* ── Base Resets ───────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--surface);
+  color: #e2e8f0;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. CRT SCANLINE OVERLAY
+   Applied to <body> via ::after — continuous rolling scanlines like a CRT TV
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+      rgba(0, 0, 0, var(--scanline-opacity)) 4px);
+  animation: crt-scroll 8s linear infinite;
+}
+
+@keyframes crt-scroll {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 200px;
+  }
+}
+
+/* Subtle CRT vignette (darkened corners) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.35) 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. SCREEN JITTER — Occasional micro-shake on the whole page
+   Fires every ~6 seconds for 0.3s bursts (not annoying, just atmospheric)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes screen-jitter {
+
+  0%,
+  95%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  96% {
+    transform: translate(var(--jitter-intensity), calc(var(--jitter-intensity) * -1));
+  }
+
+  97% {
+    transform: translate(calc(var(--jitter-intensity) * -1), var(--jitter-intensity));
+  }
+
+  98% {
+    transform: translate(var(--jitter-intensity), 0);
+  }
+
+  99% {
+    transform: translate(calc(var(--jitter-intensity) * -0.5), calc(var(--jitter-intensity) * 0.5));
+  }
+}
+
+#__next,
+main {
+  animation: screen-jitter 6s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. CHROMATIC ABERRATION — RGB Split on headings and key UI elements
+   Uses text-shadow for a subtle always-on effect
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.crt-text,
+h1 {
+  text-shadow:
+    -0.5px 0 rgba(255, 34, 68, 0.35),
+    0.5px 0 rgba(0, 255, 238, 0.35);
+}
+
+/* Stronger chromatic aberration on hover */
+.crt-text-strong,
+.crt-text:hover,
+h1:hover {
+  text-shadow:
+    -1.5px 0 rgba(255, 34, 68, 0.6),
+    1.5px 0 rgba(0, 255, 238, 0.6),
+    0 0 12px rgba(34, 197, 94, 0.3);
+  transition: text-shadow 0.15s ease;
+}
+
+/* Neon glow text utility */
+.neon-green {
+  color: var(--crt-green);
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.6), 0 0 25px rgba(34, 197, 94, 0.3);
+}
+
+.neon-red {
+  color: var(--crt-red);
+  text-shadow: 0 0 8px rgba(255, 34, 68, 0.6), 0 0 25px rgba(255, 34, 68, 0.3);
+}
+
+.neon-cyan {
+  color: var(--crt-cyan);
+  text-shadow: 0 0 8px rgba(0, 255, 238, 0.6), 0 0 25px rgba(0, 255, 238, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. CRT BUTTON STYLE — Neon-bordered buttons with glow + flicker
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.crt-btn {
+  position: relative;
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.06);
+  color: #22c55e;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.crt-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 1px,
+      rgba(34, 197, 94, 0.03) 1px,
+      rgba(34, 197, 94, 0.03) 2px);
+  pointer-events: none;
+}
+
+.crt-btn:hover {
+  border-color: #22c55e;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4), inset 0 0 15px rgba(34, 197, 94, 0.06);
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.crt-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.6), inset 0 0 25px rgba(34, 197, 94, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. CRT INPUT FIELDS — Retro terminal-style inputs
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.crt-input {
+  background: rgba(10, 14, 23, 0.8);
+  border: 1px solid var(--surface-border);
+  color: #e2e8f0;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  caret-color: var(--crt-green);
+  transition: all 0.2s ease;
+}
+
+.crt-input::placeholder {
+  color: rgba(100, 116, 139, 0.5);
+}
+
+.crt-input:focus {
+  outline: none;
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.15), inset 0 0 4px rgba(34, 197, 94, 0.05);
+}
+
+.crt-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. CARD / PANEL — Glass CRT panels
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.crt-panel {
+  background: linear-gradient(145deg, rgba(15, 20, 32, 0.95), rgba(10, 14, 23, 0.95));
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Internal scanlines on card */
+.crt-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.02) 3px,
+      rgba(0, 0, 0, 0.02) 4px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. GLITCH TEXT EFFECT — Used on crash multiplier (data-text attribute)
+   RGB-split pseudo-elements with random clip-path strips
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes glitch-shake {
+
+  0%,
+  100% {
+    transform: translate(0, 0) skewX(0deg);
+  }
+
+  5% {
+    transform: translate(-4px, 2px) skewX(-3deg);
+  }
+
+  10% {
+    transform: translate(4px, -2px) skewX(3deg);
+  }
+
+  15% {
+    transform: translate(-3px, 1px) skewX(-1deg);
+  }
+
+  20% {
+    transform: translate(2px, -3px) skewX(2deg);
+  }
+
+  25% {
+    transform: translate(-5px, 0px) skewX(-4deg);
+  }
+
+  30% {
+    transform: translate(5px, 1px) skewX(1deg);
+  }
+
+  35% {
+    transform: translate(-2px, -2px) skewX(-2deg);
+  }
+
+  40% {
+    transform: translate(3px, 2px) skewX(3deg);
+  }
+
+  50% {
+    transform: translate(-4px, 3px) skewX(-3deg);
+  }
+
+  60% {
+    transform: translate(-1px, 1px) skewX(-1deg);
+  }
+
+  70% {
+    transform: translate(-3px, 0px) skewX(-2deg);
+  }
+
+  80% {
+    transform: translate(-5px, -1px) skewX(-4deg);
+  }
+
+  90% {
+    transform: translate(-2px, -3px) skewX(-1deg);
+  }
+}
+
+@keyframes glitch-red {
+
+  0%,
+  100% {
+    clip-path: inset(0 0 100% 0);
+    transform: translateX(0);
+  }
+
+  10% {
+    clip-path: inset(8% 0 55% 0);
+    transform: translateX(-6px);
+  }
+
+  20% {
+    clip-path: inset(30% 0 20% 0);
+    transform: translateX(5px);
+  }
+
+  30% {
+    clip-path: inset(60% 0 10% 0);
+    transform: translateX(-4px);
+  }
+
+  40% {
+    clip-path: inset(15% 0 70% 0);
+    transform: translateX(6px);
+  }
+
+  50% {
+    clip-path: inset(45% 0 35% 0);
+    transform: translateX(-5px);
+  }
+
+  60% {
+    clip-path: inset(5% 0 80% 0);
+    transform: translateX(4px);
+  }
+
+  70% {
+    clip-path: inset(70% 0 5% 0);
+    transform: translateX(-6px);
+  }
+
+  80% {
+    clip-path: inset(25% 0 50% 0);
+    transform: translateX(5px);
+  }
+
+  90% {
+    clip-path: inset(50% 0 25% 0);
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes glitch-cyan {
+
+  0%,
+  100% {
+    clip-path: inset(0 0 100% 0);
+    transform: translateX(0);
+  }
+
+  10% {
+    clip-path: inset(55% 0 8% 0);
+    transform: translateX(6px);
+  }
+
+  20% {
+    clip-path: inset(20% 0 30% 0);
+    transform: translateX(-5px);
+  }
+
+  30% {
+    clip-path: inset(10% 0 60% 0);
+    transform: translateX(4px);
+  }
+
+  40% {
+    clip-path: inset(70% 0 15% 0);
+    transform: translateX(-6px);
+  }
+
+  50% {
+    clip-path: inset(35% 0 45% 0);
+    transform: translateX(5px);
+  }
+
+  60% {
+    clip-path: inset(80% 0 5% 0);
+    transform: translateX(-4px);
+  }
+
+  70% {
+    clip-path: inset(5% 0 70% 0);
+    transform: translateX(6px);
+  }
+
+  80% {
+    clip-path: inset(50% 0 25% 0);
+    transform: translateX(-5px);
+  }
+
+  90% {
+    clip-path: inset(25% 0 50% 0);
+    transform: translateX(4px);
+  }
+}
+
+.glitch-active {
+  animation: glitch-shake 0.4s steps(1) infinite;
+  position: relative;
+}
+
+.glitch-active::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--crt-red);
+  mix-blend-mode: screen;
+  animation: glitch-red 0.4s steps(1) infinite;
+  pointer-events: none;
+  font: inherit;
+  font-weight: inherit;
+  text-align: center;
+}
+
+.glitch-active::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--crt-cyan);
+  mix-blend-mode: screen;
+  animation: glitch-cyan 0.4s steps(1) infinite;
+  pointer-events: none;
+  font: inherit;
+  font-weight: inherit;
+  text-align: center;
+}
+
+.glitch-active-green {
+  animation: glitch-shake 0.4s steps(1) infinite;
+  position: relative;
+}
+
+.glitch-active-green::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--crt-green);
+  mix-blend-mode: screen;
+  animation: glitch-red 0.4s steps(1) infinite;
+  pointer-events: none;
+  font: inherit;
+  font-weight: inherit;
+  text-align: center;
+}
+
+.glitch-active-green::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--crt-yellow);
+  mix-blend-mode: screen;
+  animation: glitch-cyan 0.4s steps(1) infinite;
+  pointer-events: none;
+  font: inherit;
+  font-weight: inherit;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. FLICKER & GLOW ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Subtle flicker on neon elements (like a failing fluorescent tube) */
+@keyframes neon-flicker {
+
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    opacity: 1;
+  }
+
+  20%,
+  24%,
+  55% {
+    opacity: 0.85;
+  }
+}
+
+.neon-flicker {
+  animation: neon-flicker 3s ease-in-out infinite;
+}
+
+/* Pulse glow for CTA buttons */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 55px rgba(34, 197, 94, 0.9);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 1.2s ease-in-out infinite;
+}
+
+/* Crash vignette flash — red edge glow */
+@keyframes vignette-flash {
+  0% {
+    box-shadow: inset 0 0 80px rgba(239, 68, 68, 0.7);
+  }
+
+  40% {
+    box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.5);
+  }
+
+  100% {
+    box-shadow: inset 0 0 0px rgba(239, 68, 68, 0);
+  }
+}
+
+.vignette-flash {
+  animation: vignette-flash 1.6s ease-out forwards;
+}
+
+/* Boot-up flicker for page load */
+@keyframes crt-boot {
+  0% {
+    opacity: 0;
+    filter: brightness(3) saturate(0);
+  }
+
+  30% {
+    opacity: 0.6;
+    filter: brightness(1.5) saturate(0.5);
+  }
+
+  50% {
+    opacity: 0.3;
+    filter: brightness(2) saturate(0.2);
+  }
+
+  70% {
+    opacity: 0.8;
+    filter: brightness(1.2) saturate(0.8);
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(1) saturate(1);
+  }
+}
+
+.crt-boot {
+  animation: crt-boot 0.8s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3550;
+}
+
+/* Number input arrows removal */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Grid noise pattern (subtle background texture) */
+.crt-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Glowing border utility */
+.glow-border-green {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3), inset 0 0 12px rgba(34, 197, 94, 0.05);
+}
+
+.glow-border-red {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3), inset 0 0 12px rgba(239, 68, 68, 0.05);
+}
+
+.glow-border-cyan {
+  box-shadow: 0 0 12px rgba(0, 255, 238, 0.3), inset 0 0 12px rgba(0, 255, 238, 0.05);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(34, 197, 94, 0.3);
+  color: #fff;
+}
